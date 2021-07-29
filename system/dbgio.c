@@ -1,6 +1,7 @@
 #include <stdarg.h>
+#include <sys/time.h>
 
-#include "3rdparty/tiny-printf/printf.h"
+#include "printf.h"
 #include "system/dbgio.h"
 #include "system/uart.h"
 #include "osal/osal.h"
@@ -25,8 +26,14 @@ void dbgio_printf_extended(bool use_mutex,
 {
     va_list args;
 
+    if (timestamp) {
+        struct timeval time;
+        gettimeofday(&time, NULL);
+        printf("%05d:%03d ", (uint32_t)time.tv_sec, (uint32_t)time.tv_usec / 1000);
+    }
+
     if (func && line > 0) {
-        printf("%s:%d ", func, line);
+        printf("[%s:%d] ", func, line);
     }
 
     if (color) {

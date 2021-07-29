@@ -1,7 +1,8 @@
-#include <stdio.h>
+#include "system/dbgio.h"
+
 
 int hello_test(int argc, char *argv[])
 {
-    printf("hello, world!\r\n");
+    CONSOLE_LOG("hello, world!");
     return 0;
 }

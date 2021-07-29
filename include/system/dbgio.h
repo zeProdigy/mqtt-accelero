@@ -38,10 +38,10 @@ char dbgio_getchar(void);
 
 
 #define CONSOLE_LOG(format, args...)\
-    dbgio_printf_extended(false, false, true, __FUNCTION__, __LINE__, CLR_CYAN, format, ## args)
+    dbgio_printf_extended(false, true, true, __FUNCTION__, __LINE__, CLR_CYAN, format, ## args)
 
 #define CONSOLE_ERROR(format, args...)\
-    dbgio_printf_extended(false, false, true, __FUNCTION__, __LINE__, CLR_RED, format, ## args)
+    dbgio_printf_extended(false, true, true, __FUNCTION__, __LINE__, CLR_RED, format, ## args)
 
 #define CONSOLE_MEMDUMP(data, size, format, args...)\
     dbgio_print_memory(data, size, format, ## args)

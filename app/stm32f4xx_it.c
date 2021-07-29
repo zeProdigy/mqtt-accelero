@@ -33,6 +33,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "hal/stm32f4xx.h"
 #include "app/stm32f4xx_it.h"
+#include "system/timer.h"
+#include "system/uptimer.h"
 #include "osal/osal.h"
 
 /* USER CODE BEGIN 0 */
@@ -61,6 +63,20 @@ void SysTick_Handler(void)
 /******************************************************************************/
 
 /* USER CODE BEGIN 1 */
+void TIM5_IRQHandler(void)
+{
+    timer_conf_t *timer = (timer_conf_t *)&timer_list[CLOCK_TIMER];
+    HAL_TIM_IRQHandler(&timer->handler);
+}
 
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htimer)
+{
+    for (size_t n = 0; n < timer_list_len; n++) {
+        if (htimer->Instance == TIM5) {
+            uptimer_update();
+        }
+    }
+}
 /* USER CODE END 1 */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

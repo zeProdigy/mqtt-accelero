@@ -4,10 +4,15 @@
 #include "system/cpu.h"
 #include "system/gpio.h"
 #include "system/uart.h"
+#include "system/rtc.h"
+#include "system/timer.h"
 #include "system/dbgio.h"
+#include "system/uptimer.h"
 #include "system/cmd_line.h"
 
 #include "osal/osal.h"
+
+#include "app/shell/shell.h"
 
 
 static USBD_HandleTypeDef usb_dev;
@@ -39,7 +44,7 @@ void blinker(__attribute__((unused)) void const *params)
 
 void cmd_line(__attribute__((unused)) void const *params)
 {
-    cmd_line_process();
+    cmd_line_process(shell_exec_cmd);
 }
 
 
@@ -48,7 +53,10 @@ int main(void) {
     cpu_systick_setup();
     cpu_features_setup();
 
+    rtc_setup();
     uart_init(DEBUG_UART, 115200);
+    uptimer_setup();
+    uptimer_start();
 
     print_banner();
 

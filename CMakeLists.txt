@@ -9,6 +9,7 @@ option(FREERTOS "Build target with include FreeRTOS" OFF)
 set(LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/STM32F407VGTx_FLASH.ld")
 
 add_definitions(-DSTM32F407xx)
+add_definitions(-DUSE_FULL_LL_DRIVER)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O0 -Wall --std=gnu99")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -Wall --std=gnu++11")
@@ -86,7 +87,7 @@ file(GLOB_RECURSE APP_SRC
 # -- BUILD
 add_executable(${PROJECT_NAME} ${APP_SRC})
 
-target_link_libraries(${PROJECT_NAME} st-hal st-usb system osal)
+target_link_libraries(${PROJECT_NAME} system st-hal st-usb osal)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".elf")
 

@@ -1,7 +1,7 @@
 #include <system/uart.h>
 
 uart_conf_t uart_list[] = {
-    //
+    // DEBUG_UART
     {
         .handler = {
             .Instance = USART2,

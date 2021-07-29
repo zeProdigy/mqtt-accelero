@@ -9,15 +9,14 @@ int cpu_clock_setup(void)
     __HAL_RCC_PWR_CLK_ENABLE();
     __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 
-    osc.OscillatorType      = RCC_OSCILLATORTYPE_HSI;
-    osc.HSIState            = RCC_HSI_ON;
-    osc.HSICalibrationValue = 16;
-    osc.PLL.PLLState        = RCC_PLL_ON;
-    osc.PLL.PLLSource       = RCC_PLLSOURCE_HSI;
-    osc.PLL.PLLM            = 8;
-    osc.PLL.PLLN            = 168;
-    osc.PLL.PLLP            = RCC_PLLP_DIV2;
-    osc.PLL.PLLQ            = 7;
+    osc.OscillatorType  = RCC_OSCILLATORTYPE_HSE;
+    osc.HSEState        = RCC_HSE_ON;
+    osc.PLL.PLLState    = RCC_PLL_ON;
+    osc.PLL.PLLSource   = RCC_PLLSOURCE_HSE;
+    osc.PLL.PLLM        = 8;
+    osc.PLL.PLLN        = 336;
+    osc.PLL.PLLP        = RCC_PLLP_DIV2;
+    osc.PLL.PLLQ        = 7;
 
     if (HAL_RCC_OscConfig(&osc) != HAL_OK) {
         return 1;
