@@ -70,6 +70,8 @@ USBD_CDC_ECM_ItfTypeDef USBD_CDC_ECM_fops =
   */
 static int8_t CDC_ECM_Itf_Init(void)
 {
+  USBD_UsrLog("CDC ECM Init");
+
   if (CDC_ECMInitialized == 0U)
   {
     /*
@@ -96,6 +98,8 @@ static int8_t CDC_ECM_Itf_DeInit(void)
 {
   USBD_CDC_ECM_HandleTypeDef *hcdc_cdc_ecm = (USBD_CDC_ECM_HandleTypeDef *)(USBD_Device.pClassData);
 
+  USBD_UsrLog("CDC ECM Deinit");
+
   /* Notify application layer that link is down */
   hcdc_cdc_ecm->LinkStatus = 0U;
 
@@ -113,6 +117,8 @@ static int8_t CDC_ECM_Itf_DeInit(void)
 static int8_t CDC_ECM_Itf_Control(uint8_t cmd, uint8_t *pbuf, uint16_t length)
 {
   USBD_CDC_ECM_HandleTypeDef *hcdc_cdc_ecm = (USBD_CDC_ECM_HandleTypeDef *)(USBD_Device.pClassData);
+
+  USBD_UsrLog("CDC ECM Control cmd = 0x%x", cmd);
 
   switch (cmd)
   {
@@ -185,6 +191,8 @@ static int8_t CDC_ECM_Itf_Receive(uint8_t *Buf, uint32_t *Len)
   /* Get the CDC_ECM handler pointer */
   USBD_CDC_ECM_HandleTypeDef *hcdc_cdc_ecm = (USBD_CDC_ECM_HandleTypeDef *)(USBD_Device.pClassData);
 
+  USBD_UsrLog("CDC ECM Receive");
+
   /* Call Eth buffer processing */
   hcdc_cdc_ecm->RxState = 1U;
 
@@ -211,6 +219,8 @@ static int8_t CDC_ECM_Itf_TransmitCplt(uint8_t *Buf, uint32_t *Len, uint8_t epnu
   UNUSED(Buf);
   UNUSED(Len);
   UNUSED(epnum);
+
+  USBD_UsrLog("CDC ECM Transmit Complete");
 
   return (0);
 }

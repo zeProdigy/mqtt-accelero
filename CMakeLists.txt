@@ -50,7 +50,7 @@ file(GLOB_RECURSE SYSTEM_SRC
 )
 
 add_library(system STATIC ${SYSTEM_SRC})
-target_link_libraries(system st-hal osal tiny-printf microrl)
+target_link_libraries(system st-hal st-usb osal tiny-printf microrl)
 
 
 # -- OSAL
@@ -69,8 +69,9 @@ file(GLOB_RECURSE LIB_USB_SRC
 )
 
 add_library(st-usb STATIC ${LIB_USB_SRC})
-target_link_libraries(st-usb st-hal)
+target_link_libraries(st-usb st-hal tiny-printf)
 
+target_compile_definitions(st-usb PUBLIC USE_USB_FS)
 target_include_directories(st-usb PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/include/usb/class/cdc_ecm"
 )

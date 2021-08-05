@@ -25,6 +25,7 @@
 #include "hal/stm32f4xx.h"
 #include <stdlib.h>
 #include <string.h>
+#include "printf.h"
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
@@ -34,7 +35,7 @@
 #define USBD_MAX_STR_DESC_SIZ                 0x100
 #define USBD_SUPPORT_USER_STRING_DESC         1
 #define USBD_SELF_POWERED                     1
-#define USBD_DEBUG_LEVEL                      0
+#define USBD_DEBUG_LEVEL                      3
 
 /* Exported macro ------------------------------------------------------------*/
 /* Memory management macros */

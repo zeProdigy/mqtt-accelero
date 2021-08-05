@@ -1,21 +1,16 @@
-#include "usb/usbd_desc.h"
-#include "usb/core/usbd_core.h"
-
 #include "system/cpu.h"
 #include "system/gpio.h"
 #include "system/uart.h"
 #include "system/rtc.h"
 #include "system/timer.h"
 #include "system/dbgio.h"
+#include "system/usb_ecm.h"
 #include "system/uptimer.h"
 #include "system/cmd_line.h"
 
 #include "osal/osal.h"
 
 #include "app/shell/shell.h"
-
-
-static USBD_HandleTypeDef usb_dev;
 
 
 void print_banner(void)
@@ -53,10 +48,18 @@ int main(void) {
     cpu_systick_setup();
     cpu_features_setup();
 
-    rtc_setup();
     uart_init(DEBUG_UART, 115200);
+
+    if (rtc_setup()) {
+        CONSOLE_LOG("Can't init RTC");
+    }
+
     uptimer_setup();
     uptimer_start();
+
+    if (usb_ecm_init()) {
+        CONSOLE_ERROR("Can't init usb ecm");
+    }
 
     print_banner();
 
