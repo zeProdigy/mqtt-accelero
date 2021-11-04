@@ -77,6 +77,18 @@ target_include_directories(st-usb PRIVATE
 )
 
 
+# -- lwip
+set(LWIP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/lwip)
+set(LWIP_INCLUDE_DIRS
+    "${LWIP_DIR}/src/include"
+    "${LWIP_DIR}/contrib"
+    "${LWIP_DIR}/contrib/ports/freertos/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/3rdparty/lwip"
+)
+
+include(${LWIP_DIR}/src/Filelists.cmake)
+
+
 # -- APP
 file(GLOB_RECURSE APP_SRC
     "${CMAKE_CURRENT_SOURCE_DIR}/app/*.c"
@@ -88,7 +100,9 @@ file(GLOB_RECURSE APP_SRC
 # -- BUILD
 add_executable(${PROJECT_NAME} ${APP_SRC})
 
-target_link_libraries(${PROJECT_NAME} system st-hal st-usb osal)
+target_link_libraries(${PROJECT_NAME} system st-hal st-usb osal lwipcore)
+
+target_include_directories(${PROJECT_NAME} PRIVATE ${LWIP_INCLUDE_DIRS})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".elf")
 
