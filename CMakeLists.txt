@@ -61,22 +61,6 @@ add_library(osal STATIC ${OSAL_SRC})
 target_link_libraries(osal freertos)
 
 
-# -- USB
-file(GLOB_RECURSE LIB_USB_SRC
-    "${CMAKE_CURRENT_SOURCE_DIR}/usb/*.c"
-    "${CMAKE_CURRENT_SOURCE_DIR}/usb/core/*.c"
-    "${CMAKE_CURRENT_SOURCE_DIR}/usb/class/cdc_ecm/*.c"
-)
-
-add_library(st-usb STATIC ${LIB_USB_SRC})
-target_link_libraries(st-usb st-hal tiny-printf)
-
-target_compile_definitions(st-usb PUBLIC USE_USB_FS)
-target_include_directories(st-usb PRIVATE
-    "${CMAKE_CURRENT_SOURCE_DIR}/include/usb/class/cdc_ecm"
-)
-
-
 # -- lwip
 set(LWIP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/lwip)
 set(LWIP_INCLUDE_DIRS
@@ -85,8 +69,25 @@ set(LWIP_INCLUDE_DIRS
     "${LWIP_DIR}/contrib/ports/freertos/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/3rdparty/lwip"
 )
-
 include(${LWIP_DIR}/src/Filelists.cmake)
+target_link_libraries(lwipcore system)
+
+
+# -- USB
+file(GLOB_RECURSE LIB_USB_SRC
+    "${CMAKE_CURRENT_SOURCE_DIR}/usb/*.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/usb/core/*.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/usb/class/cdc_ecm/*.c"
+)
+
+add_library(st-usb STATIC ${LIB_USB_SRC})
+target_link_libraries(st-usb st-hal tiny-printf lwipcore)
+
+target_compile_definitions(st-usb PUBLIC USE_USB_FS)
+target_include_directories(st-usb PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/usb/class/cdc_ecm"
+    "${LWIP_INCLUDE_DIRS}"
+)
 
 
 # -- APP

@@ -78,9 +78,8 @@
  * systems, this should be defined to something less resource-consuming.
  */
 #ifndef LWIP_PLATFORM_DIAG
-#define LWIP_PLATFORM_DIAG(x) do {printf x;} while(0)
-#include <stdio.h>
-#include <stdlib.h>
+#include "system/dbgio.h"
+#define LWIP_PLATFORM_DIAG(x) do {CONSOLE_ERROR x;} while(0)
 #endif
 
 /** Platform specific assertion handling.<br>
