@@ -7,6 +7,7 @@
 #include "system/usb_ecm.h"
 #include "system/uptimer.h"
 #include "system/cmd_line.h"
+#include "system/net.h"
 
 #include "osal/osal.h"
 
@@ -29,9 +30,9 @@ void print_banner(void)
 void blinker(__attribute__((unused)) void const *params)
 {
     uint32_t period = 1000;
-    gpio_init(GPIO_GREEN_LED);
+    gpio_init(GPIO_BLUE_LED);
     while(true) {
-        gpio_toggle(GPIO_GREEN_LED);
+        gpio_toggle(GPIO_BLUE_LED);
         osal_thread_sleep(period);
     }
 }
@@ -57,11 +58,13 @@ int main(void) {
     uptimer_setup();
     uptimer_start();
 
+    print_banner();
+
+    net_init();
+
     if (usb_ecm_init()) {
         CONSOLE_ERROR("Can't init usb ecm");
     }
-
-    print_banner();
 
     if (osal_thread_create("blinker", blinker, 128, THREAD_PRIORITY_LOW, NULL) == NULL) {
         CONSOLE_ERROR("Can't create blinker thread");

@@ -28,13 +28,30 @@
 /* Exported constants --------------------------------------------------------*/
 
 /* Ensure this MAC address value is same as MAC_ADDRx declared in STM32xxx_conf.h */
-#define CDC_ECM_MAC_STR_DESC                 (uint8_t *)"000202030000"
+#define CDC_ECM_MAC_STR_DESC                 (uint8_t *)"000202020000"
 #define CDC_ECM_MAC_ADDR0                    0x00U /* 01 */
 #define CDC_ECM_MAC_ADDR1                    0x02U /* 02 */
 #define CDC_ECM_MAC_ADDR2                    0x02U /* 03 */
 #define CDC_ECM_MAC_ADDR3                    0x03U /* 00 */
 #define CDC_ECM_MAC_ADDR4                    0x00U /* 00 */
 #define CDC_ECM_MAC_ADDR5                    0x00U /* 00 */
+
+#define IP_ADDR0                                      192U
+#define IP_ADDR1                                      168U
+#define IP_ADDR2                                      0U
+#define IP_ADDR3                                      10U
+
+/*NETMASK*/
+#define NETMASK_ADDR0                                 255U
+#define NETMASK_ADDR1                                 255U
+#define NETMASK_ADDR2                                 255U
+#define NETMASK_ADDR3                                 0U
+
+/*Gateway Address*/
+#define GW_ADDR0                                      192U
+#define GW_ADDR1                                      168U
+#define GW_ADDR2                                      0U
+#define GW_ADDR3                                      1U
 
 /* Max Number of Trials waiting for Tx ready */
 #define CDC_ECM_MAX_TX_WAIT_TRIALS           1000000U

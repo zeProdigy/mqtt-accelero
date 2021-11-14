@@ -44,23 +44,6 @@ file(GLOB_RECURSE STM32F4XX_HAL_SRC
 add_library(st-hal STATIC ${STM32F4XX_HAL_SRC})
 
 
-# -- System
-file(GLOB_RECURSE SYSTEM_SRC
-    "${CMAKE_CURRENT_SOURCE_DIR}/system/*.c"
-)
-
-add_library(system STATIC ${SYSTEM_SRC})
-target_link_libraries(system st-hal st-usb osal tiny-printf microrl)
-
-
-# -- OSAL
-file(GLOB_RECURSE OSAL_SRC
-    "${CMAKE_CURRENT_SOURCE_DIR}/osal/*.c"
-)
-add_library(osal STATIC ${OSAL_SRC})
-target_link_libraries(osal freertos)
-
-
 # -- lwip
 set(LWIP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/lwip)
 set(LWIP_INCLUDE_DIRS
@@ -71,6 +54,24 @@ set(LWIP_INCLUDE_DIRS
 )
 include(${LWIP_DIR}/src/Filelists.cmake)
 target_link_libraries(lwipcore system)
+
+
+# -- System
+file(GLOB_RECURSE SYSTEM_SRC
+    "${CMAKE_CURRENT_SOURCE_DIR}/system/*.c"
+)
+
+add_library(system STATIC ${SYSTEM_SRC})
+target_include_directories(system PRIVATE ${LWIP_INCLUDE_DIRS})
+target_link_libraries(system st-hal st-usb osal tiny-printf microrl lwipcore)
+
+
+# -- OSAL
+file(GLOB_RECURSE OSAL_SRC
+    "${CMAKE_CURRENT_SOURCE_DIR}/osal/*.c"
+)
+add_library(osal STATIC ${OSAL_SRC})
+target_link_libraries(osal freertos)
 
 
 # -- USB
@@ -101,9 +102,9 @@ file(GLOB_RECURSE APP_SRC
 # -- BUILD
 add_executable(${PROJECT_NAME} ${APP_SRC})
 
-target_link_libraries(${PROJECT_NAME} system st-hal st-usb osal lwipcore)
-
 target_include_directories(${PROJECT_NAME} PRIVATE ${LWIP_INCLUDE_DIRS})
+
+target_link_libraries(${PROJECT_NAME} system st-hal st-usb osal)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".elf")
 

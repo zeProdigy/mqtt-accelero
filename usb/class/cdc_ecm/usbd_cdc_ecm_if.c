@@ -20,6 +20,11 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_hal.h"
 #include "usbd_cdc_ecm_if.h"
+#include "lwip/opt.h"
+#include "lwip/init.h"
+#include "lwip/timeouts.h"
+#include "netif/etharp.h"
+#include "system/net.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -39,7 +44,10 @@ __ALIGN_BEGIN  static uint8_t UserTxBuffer[CDC_ECM_ETH_MAX_SEGSZE + 100]__ALIGN_
 static uint8_t CDC_ECMInitialized = 0U;
 
 /* USB handler declaration */
-extern USBD_HandleTypeDef  USBD_Device;
+extern USBD_HandleTypeDef USBD_Device;
+
+// TODO! избавиться от extern
+extern struct netif main_netif;
 
 /* Private function prototypes -----------------------------------------------*/
 static int8_t CDC_ECM_Itf_Init(void);
@@ -60,6 +68,42 @@ USBD_CDC_ECM_ItfTypeDef USBD_CDC_ECM_fops =
   (uint8_t *)CDC_ECM_MAC_STR_DESC,
 };
 
+
+static void CDC_ECM_NetifConfig(void)
+{
+  ip_addr_t ipaddr;
+  ip_addr_t netmask;
+  ip_addr_t gw;
+
+  CONSOLE_LOG("Configure net iface");
+
+  IP_ADDR4(&ipaddr, IP_ADDR0, IP_ADDR1, IP_ADDR2, IP_ADDR3);
+  IP_ADDR4(&netmask, NETMASK_ADDR0, NETMASK_ADDR1, NETMASK_ADDR2, NETMASK_ADDR3);
+  IP_ADDR4(&gw, GW_ADDR0, GW_ADDR1, GW_ADDR2, GW_ADDR3);
+
+  /* add the network interface */
+  (void)netif_add(&main_netif, &ipaddr, &netmask, &gw, NULL, &ethernetif_init, &ethernet_input);
+
+  /*  Registers the default network interface */
+  netif_set_default(&main_netif);
+
+  if (netif_is_link_up(&main_netif)== 1U)
+  {
+    /* When the netif is fully configured this function must be called */
+    CONSOLE_LOG("Up net iface");
+    netif_set_up(&main_netif);
+  }
+  else
+  {
+    /* When the netif link is down this function must be called */
+    netif_set_down(&main_netif);
+  }
+
+  /* Set the link callback function, this function is called on change of link status*/
+  netif_set_link_callback(&main_netif, ethernetif_update_config);
+}
+
+
 /* Private functions ---------------------------------------------------------*/
 
 /**
@@ -77,6 +121,9 @@ static int8_t CDC_ECM_Itf_Init(void)
     /*
       Initialize the TCP/IP stack here
     */
+    lwip_init();
+
+    CDC_ECM_NetifConfig();
 
     CDC_ECMInitialized = 1U;
   }
@@ -149,11 +196,16 @@ static int8_t CDC_ECM_Itf_Control(uint8_t cmd, uint8_t *pbuf, uint16_t length)
         /*
           Setup the Link up at TCP/IP level
         */
+        CONSOLE_LOG("Set link up");
+        netif_set_link_up(&main_netif);
+
         hcdc_cdc_ecm->LinkStatus = 1U;
 
         /* Modification for MacOS which doesn't send SetInterface before receiving INs */
         if (hcdc_cdc_ecm->NotificationStatus == 0U)
         {
+          CONSOLE_LOG("Send link up notify");
+          
           /* Send notification: NETWORK_CONNECTION Event */
           (void)USBD_CDC_ECM_SendNotification(&USBD_Device, NETWORK_CONNECTION,
                                               CDC_ECM_NET_CONNECTED, NULL);
@@ -191,10 +243,10 @@ static int8_t CDC_ECM_Itf_Receive(uint8_t *Buf, uint32_t *Len)
   /* Get the CDC_ECM handler pointer */
   USBD_CDC_ECM_HandleTypeDef *hcdc_cdc_ecm = (USBD_CDC_ECM_HandleTypeDef *)(USBD_Device.pClassData);
 
-  USBD_UsrLog("CDC ECM Receive");
-
   /* Call Eth buffer processing */
   hcdc_cdc_ecm->RxState = 1U;
+
+  ethernetif_ready_cb();
 
   UNUSED(Len);
   UNUSED(Buf);
@@ -239,11 +291,11 @@ static int8_t CDC_ECM_Itf_Process(USBD_HandleTypeDef *pdev)
 
   if ((hcdc_cdc_ecm != NULL) && (hcdc_cdc_ecm->LinkStatus != 0U))
   {
-    /*
-      Read a received packet from the Ethernet buffers and send it
-      to the lwIP for handling
-      Call here the TCP/IP background tasks.
-    */
+    /* Read a received packet from the Ethernet buffers and send it
+      to the lwIP for handling */
+
+    /* Handle timeouts */
+    sys_check_timeouts();
   }
 
   return (0);
