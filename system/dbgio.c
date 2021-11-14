@@ -54,13 +54,17 @@ void dbgio_printf_extended(bool use_mutex,
 }
 
 
-void dbgio_print_memory(void *data, size_t size, const char *desc)
+void dbgio_print_memory(void *data, size_t size, const char *format, ...)
 {
     size_t lines = size / 16 + ((size % 16 == 0) ? 0 : 1);
     size_t countdown = size;
 
-    if (desc) {
-        printf("%s\r\n", desc);
+    if (format) {
+        va_list args;
+        va_start(args, format);
+        vprintf(format, args);
+        va_end(args);
+        printf("\r\n");
     }
 
     for (size_t line = 0; line < lines; line++) {
@@ -111,6 +115,40 @@ void vApplicationStackOverflowHook(__attribute__((unused)) TaskHandle_t xTask,
     // osal_thread_stop_all();
     dbgio_printf_extended(false, true, true, NULL, 0, "Thread \"%s\" stack overflow!", pcTaskName);
     while (true) {}
+}
+
+
+// freertos assertion hook
+void vApplicationAssertionHook(const char* file, uint32_t line)
+{   
+    __disable_irq();
+    CONSOLE_ASSERT("Freertos assert: %s:%d", file, line);
+    while(true);
+}
+
+
+// st-hal assertion hook
+void assert_failed(uint8_t* file, uint32_t line)
+{
+    __disable_irq();
+    CONSOLE_ASSERT("ST-HAL assert: %s:%d", file, line);
+    while(true);
+}
+
+
+// newlib assertion hook
+void __assert_func(const char *file, int line, const char *func, const char *failedexpr)
+{
+    __disable_irq();
+
+    printf("%s", CLR_YELLOW);
+    printf("\r\nAssertion failed!\r\n");
+    printf("\texpr: %s\r\n", failedexpr);
+    printf("\tfile: %s:%d\r\n", file, line);
+    printf("\tfunc: %s\r\n", func);
+    printf("%s", CLR_DEFAULT);
+
+    while(true);
 }
 
 

@@ -32,13 +32,16 @@ void dbgio_printf_extended(bool use_mutex,
                            const char *color,
                            const char *format, ...);
 
-void dbgio_print_memory(void *data, size_t size, const char *desc);
+void dbgio_print_memory(void *data, size_t size, const char *format, ...);
 
 char dbgio_getchar(void);
 
 
 #define CONSOLE_LOG(format, args...)\
     dbgio_printf_extended(false, true, true, __FUNCTION__, __LINE__, CLR_CYAN, format, ## args)
+
+#define CONSOLE_ASSERT(format, args...)\
+    dbgio_printf_extended(false, true, true, __FUNCTION__, __LINE__, CLR_YELLOW, format, ## args)
 
 #define CONSOLE_ERROR(format, args...)\
     dbgio_printf_extended(false, true, true, __FUNCTION__, __LINE__, CLR_RED, format, ## args)

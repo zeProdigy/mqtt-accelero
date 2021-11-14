@@ -99,13 +99,14 @@ extern uint32_t SystemCoreClock;
 #define configMINIMAL_STACK_SIZE		( ( uint16_t ) 128 )
 #define configTOTAL_HEAP_SIZE			( (size_t) 15360 )
 #define configMAX_TASK_NAME_LEN			( 10 )
+#define configSTACK_DEPTH_TYPE          uint16_t
 #define configUSE_TRACE_FACILITY		1
 #define configUSE_16_BIT_TICKS			0
 #define configIDLE_SHOULD_YIELD			1
 #define configUSE_MUTEXES				1
 #define configQUEUE_REGISTRY_SIZE		8
 #define configCHECK_FOR_STACK_OVERFLOW	2
-#define configUSE_RECURSIVE_MUTEXES		0
+#define configUSE_RECURSIVE_MUTEXES		1
 #define configUSE_MALLOC_FAILED_HOOK	0
 #define configUSE_APPLICATION_TASK_TAG	0
 #define configUSE_COUNTING_SEMAPHORES	0
@@ -158,9 +159,15 @@ to all Cortex-M ports, and do not rely on any particular library functions. */
 See http://www.FreeRTOS.org/RTOS-Cortex-M3-M4.html. */
 #define configMAX_SYSCALL_INTERRUPT_PRIORITY 	( configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY << (8 - configPRIO_BITS) )
 
+extern void vApplicationAssertionHook(const char* file, uint32_t line);
+
 /* Normal assert() semantics without relying on the provision of an assert.h
 header file. */
-#define configASSERT( x ) if( ( x ) == 0 ) { taskDISABLE_INTERRUPTS(); for( ;; ); }
+#define configASSERT( x ) if( ( x ) == 0 ) { \
+    taskDISABLE_INTERRUPTS(); \
+    vApplicationAssertionHook(__FILE__, __LINE__); \
+    for(;;); \
+}
 
 /* Definitions that map the FreeRTOS port interrupt handlers to their CMSIS
 standard names. */

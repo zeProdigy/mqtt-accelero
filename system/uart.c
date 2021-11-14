@@ -34,7 +34,24 @@ int uart_init(UART_ID_T id, size_t baud_rate)
 int uart_write_polling(UART_ID_T id, const void *data, size_t size)
 {
     uart_conf_t *uart = (uart_conf_t *)&uart_list[id];
-    return HAL_UART_Transmit(&uart->handler, (uint8_t *)data, size, -1);
+    HAL_StatusTypeDef ret;
+
+    ret = HAL_UART_Transmit(&uart->handler, (uint8_t *)data, size, -1);
+    
+    // TODO! Подумать, как иначе реализовать отдельное поведение для отладочного uart
+    if (id == DEBUG_UART) {
+        // TODO! Нам нужно уметь писать в отладочный порт в любой момент в том числе в прерываниях,
+        //       следовательно мы не можем ждать, например, освобождения мьютекса
+        //       Напрмер, если произошёл assert в обработчике прерывания, мы должны не смотря на то, что
+        //       порт может быть занят, напечатать сообщения. 
+        //       Пока что, принудительно ставим стейт, но нужно подумать, как сделать лучше 
+        if (ret == HAL_BUSY) {
+            uart->handler.gState = HAL_UART_STATE_READY;
+            ret = HAL_UART_Transmit(&uart->handler, (uint8_t *)data, size, -1);
+        }
+    }
+
+    return ret;
 }
 
 
