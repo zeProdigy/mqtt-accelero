@@ -12,6 +12,39 @@ gpio_conf_t gpio_list[] = {
         .clk_en = RCC_AHB1ENR_GPIODEN
     },
 
+    // GPIO_RED_LED
+    {
+        .base = GPIOD,
+        .conf = {
+            .Pin = GPIO_PIN_14,
+            .Mode = GPIO_MODE_OUTPUT_PP,
+            .Pull = GPIO_NOPULL,
+        },
+        .clk_en = RCC_AHB1ENR_GPIODEN
+    },
+
+    // GPIO_ORANGE_LED
+    {
+        .base = GPIOD,
+        .conf = {
+            .Pin = GPIO_PIN_13,
+            .Mode = GPIO_MODE_OUTPUT_PP,
+            .Pull = GPIO_NOPULL,
+        },
+        .clk_en = RCC_AHB1ENR_GPIODEN
+    },
+
+    // GPIO_BLUE_LED
+    {
+        .base = GPIOD,
+        .conf = {
+            .Pin = GPIO_PIN_15,
+            .Mode = GPIO_MODE_OUTPUT_PP,
+            .Pull = GPIO_NOPULL,
+        },
+        .clk_en = RCC_AHB1ENR_GPIODEN
+    },
+
     // DEBUG_UART_RX_PIN
     {
         .base = GPIOA,
