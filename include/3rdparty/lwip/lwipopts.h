@@ -1,10 +1,20 @@
 #pragma once
 
-// use lwip native API (no OS require)
+
+// use lwip OS mode
 #define NO_SYS          0
-#define LWIP_NETCONN    0
+#define LWIP_NETCONN    1
 #define LWIP_SOCKET     0
 
+// OS opt's
+#define TCPIP_THREAD_NAME              "tcpip"
+#define TCPIP_THREAD_STACKSIZE          2048
+#define TCPIP_MBOX_SIZE                 6
+#define DEFAULT_UDP_RECVMBOX_SIZE       6
+#define DEFAULT_TCP_RECVMBOX_SIZE       6
+#define DEFAULT_ACCEPTMBOX_SIZE         6
+#define DEFAULT_THREAD_STACKSIZE        512
+#define TCPIP_THREAD_PRIO               2   // в freertos нет заданных названий приоритетов
 
 // memory opts
 #define MEM_ALIGNMENT           4
@@ -60,16 +70,16 @@
 
 // debug
 #define LWIP_DEBUG                      1
-#define ETHARP_DEBUG                    LWIP_DBG_OFF
-#define NETIF_DEBUG                     LWIP_DBG_OFF
-#define INET_DEBUG                      LWIP_DBG_OFF
-#define IP_DEBUG                        LWIP_DBG_OFF
-#define RAW_DEBUG                       LWIP_DBG_OFF
-#define TCP_DEBUG                       LWIP_DBG_OFF
-#define TCP_INPUT_DEBUG                 LWIP_DBG_OFF
-#define TCP_FR_DEBUG                    LWIP_DBG_OFF
-#define TCP_OUTPUT_DEBUG                LWIP_DBG_OFF
-#define TCPIP_DEBUG                     LWIP_DBG_OFF
+#define ETHARP_DEBUG                    LWIP_DBG_ON
+#define NETIF_DEBUG                     LWIP_DBG_ON
+#define INET_DEBUG                      LWIP_DBG_ON
+#define IP_DEBUG                        LWIP_DBG_ON
+#define RAW_DEBUG                       LWIP_DBG_ON
+#define TCP_DEBUG                       LWIP_DBG_ON
+#define TCP_INPUT_DEBUG                 LWIP_DBG_ON
+#define TCP_FR_DEBUG                    LWIP_DBG_ON
+#define TCP_OUTPUT_DEBUG                LWIP_DBG_ON
+#define TCPIP_DEBUG                     LWIP_DBG_ON
 
 // other
 #define SYS_LIGHTWEIGHT_PROT 0

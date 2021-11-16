@@ -121,10 +121,10 @@ static int8_t CDC_ECM_Itf_Init(void)
     /*
       Initialize the TCP/IP stack here
     */
-    lwip_init();
+    // lwip_init();
 
-    CDC_ECM_NetifConfig();
-
+    // CDC_ECM_NetifConfig();
+    
     CDC_ECMInitialized = 1U;
   }
 
@@ -146,6 +146,9 @@ static int8_t CDC_ECM_Itf_DeInit(void)
   USBD_CDC_ECM_HandleTypeDef *hcdc_cdc_ecm = (USBD_CDC_ECM_HandleTypeDef *)(USBD_Device.pClassData);
 
   USBD_UsrLog("CDC ECM Deinit");
+
+  CONSOLE_LOG("netif set down");
+  netif_set_down(&main_netif);
 
   /* Notify application layer that link is down */
   hcdc_cdc_ecm->LinkStatus = 0U;
@@ -197,7 +200,7 @@ static int8_t CDC_ECM_Itf_Control(uint8_t cmd, uint8_t *pbuf, uint16_t length)
           Setup the Link up at TCP/IP level
         */
         CONSOLE_LOG("Set link up");
-        netif_set_link_up(&main_netif);
+        // netif_set_link_up(&main_netif);
 
         hcdc_cdc_ecm->LinkStatus = 1U;
 
