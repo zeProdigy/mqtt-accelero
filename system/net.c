@@ -43,7 +43,7 @@ static struct pbuf *low_level_input(struct netif *pnetif)
         (void)memcpy(p->payload, (uint8_t *)hcdc->RxBuffer, (uint16_t)hcdc->RxLength);
         p->len = (uint16_t)hcdc->RxLength;
     }
-    
+
     return p;
 }
 
@@ -59,7 +59,7 @@ static void process_packet(void const *arg)
     while(true) {
         osal_semaphore_wait(sem, OSAL_MAX_TIMEOUT);
 
-        // TODO Тред создаётся раньше, чем инициализируется USBD_Device.pClassData, по этому нельзя один раз 
+        // TODO Тред создаётся раньше, чем инициализируется USBD_Device.pClassData, по этому нельзя один раз
         //      запомнить адрес и использовать его. Нужно подумать, нормально ли это
         USBD_CDC_ECM_HandleTypeDef *hcdc = (USBD_CDC_ECM_HandleTypeDef*) (USBD_Device.pClassData);
 
@@ -262,7 +262,7 @@ void ethernetif_ready_cb(void)
 }
 
 
-u32_t sys_now(void)
-{
-  return HAL_GetTick();
-}
+// u32_t sys_now(void)
+// {
+//   return HAL_GetTick();
+// }

@@ -34,6 +34,14 @@ include_directories(
     "${CMAKE_CURRENT_SOURCE_DIR}/include/usb/core"
 )
 
+set(LWIP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/lwip)
+set(LWIP_INCLUDE_DIRS
+    "${LWIP_DIR}/src/include"
+    "${LWIP_DIR}/contrib"
+    "${LWIP_DIR}/contrib/ports/freertos/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/3rdparty/lwip"
+)
+
 
 # -- ST HAL
 file(GLOB_RECURSE STM32F4XX_HAL_SRC
@@ -42,18 +50,6 @@ file(GLOB_RECURSE STM32F4XX_HAL_SRC
 )
 
 add_library(st-hal STATIC ${STM32F4XX_HAL_SRC})
-
-
-# -- lwip
-set(LWIP_DIR ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/lwip)
-set(LWIP_INCLUDE_DIRS
-    "${LWIP_DIR}/src/include"
-    "${LWIP_DIR}/contrib"
-    "${LWIP_DIR}/contrib/ports/freertos/include"
-    "${CMAKE_CURRENT_SOURCE_DIR}/include/3rdparty/lwip"
-)
-include(${LWIP_DIR}/src/Filelists.cmake)
-target_link_libraries(lwipcore system)
 
 
 # -- System
@@ -72,6 +68,20 @@ file(GLOB_RECURSE OSAL_SRC
 )
 add_library(osal STATIC ${OSAL_SRC})
 target_link_libraries(osal freertos)
+
+
+# -- lwip
+include(${LWIP_DIR}/src/Filelists.cmake)
+
+set(LWIP_FREERTOS_SRC "${LWIP_DIR}/contrib/ports/freertos/sys_arch.c")
+
+add_library(lwip_contrib_port_freertos ${LWIP_FREERTOS_SRC})
+target_include_directories(lwip_contrib_port_freertos PRIVATE
+    "${LWIP_INCLUDE_DIRS}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/freertos/Source/include")
+target_link_libraries(lwip_contrib_port_freertos freertos)
+
+target_link_libraries(lwipcore lwip_contrib_port_freertos system)
 
 
 # -- USB
