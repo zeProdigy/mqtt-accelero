@@ -54,7 +54,7 @@ void dbgio_printf_extended(bool use_mutex,
 }
 
 
-void dbgio_print_memory(void *data, size_t size, const char *format, ...)
+void dbgio_print_memory(const void *data, size_t size, const char *format, ...)
 {
     size_t lines = size / 16 + ((size % 16 == 0) ? 0 : 1);
     size_t countdown = size;
@@ -120,7 +120,7 @@ void vApplicationStackOverflowHook(__attribute__((unused)) TaskHandle_t xTask,
 
 // freertos assertion hook
 void vApplicationAssertionHook(const char* file, uint32_t line)
-{   
+{
     __disable_irq();
     CONSOLE_ASSERT("Freertos assert: %s:%d", file, line);
     while(true);

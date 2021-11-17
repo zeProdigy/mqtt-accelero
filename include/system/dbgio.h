@@ -32,7 +32,7 @@ void dbgio_printf_extended(bool use_mutex,
                            const char *color,
                            const char *format, ...);
 
-void dbgio_print_memory(void *data, size_t size, const char *format, ...);
+void dbgio_print_memory(const void *data, size_t size, const char *format, ...);
 
 char dbgio_getchar(void);
 
