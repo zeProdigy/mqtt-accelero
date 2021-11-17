@@ -1,68 +1,35 @@
 #include <assert.h>
 
-#include "lwip/tcpip.h"
-#include "lwip/init.h"
-#include "lwip/timeouts.h"
-#include "netif/etharp.h"
-
+#include "system/net.h"
 #include "system/gpio.h"
 #include "system/dbgio.h"
+
 #include "osal/osal.h"
 
 // TODO! Может быть все необходимые инклады перенести в system/usb_ecm?
 #include "usb/usbd_def.h"
 #include "usb/class/cdc_ecm/usbd_cdc_ecm_if.h"
 
+#include "lwip/tcpip.h"
+#include "netif/etharp.h"
+
 
 struct netif main_netif;
 extern USBD_HandleTypeDef USBD_Device; // extern не круто
+static osal_thread_t thread;
 
-static osal_semaphore_t sem;
 
-
-static void low_level_init(struct netif *netif)
+static struct pbuf *ll_input(__attribute__((unused)) struct netif *pnetif)
 {
-    /* set MAC hardware address length */
-    netif->hwaddr_len = ETH_HWADDR_LEN;
-
-    /* Set MAC hardware address */
-    netif->hwaddr[0] =  CDC_ECM_MAC_ADDR0;
-    netif->hwaddr[1] =  CDC_ECM_MAC_ADDR1;
-    netif->hwaddr[2] =  CDC_ECM_MAC_ADDR2;
-    netif->hwaddr[3] =  CDC_ECM_MAC_ADDR3;
-    netif->hwaddr[4] =  CDC_ECM_MAC_ADDR4;
-    netif->hwaddr[5] =  CDC_ECM_MAC_ADDR5;
-
-    /* maximum transfer unit */
-    netif->mtu = 1500;
-
-    /* device capabilities */
-    /* don't set NETIF_FLAG_ETHARP if this device is not an ethernet one */
-    netif->flags |= NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP;
-}
-
-
-static struct pbuf *low_level_input(struct netif *pnetif)
-{
+    USBD_CDC_ECM_HandleTypeDef *hcdc = (USBD_CDC_ECM_HandleTypeDef *)USBD_Device.pClassData;
     struct pbuf *p = NULL;
 
-    USBD_CDC_ECM_HandleTypeDef *hcdc = (USBD_CDC_ECM_HandleTypeDef*) (USBD_Device.pClassData);
-    uint32_t temp = hcdc->RxState;
-
-    UNUSED(pnetif);
-
-    /* Get the length of the current buffer */
-    if ((hcdc->RxLength > 0U) && (temp == 1U))
-    {
-        /* Allocate a pbuf chain of pbufs from the Lwip buffer pool */
+    if ((hcdc->RxLength > 0) && (hcdc->RxState == 1)) {
         p = pbuf_alloc(PBUF_RAW, (uint16_t)hcdc->RxLength, PBUF_POOL);
     }
 
-    /* Check that allocation was done correctly */
-    if (p != NULL)
-    {
-        /* Copy the buffer data in the allocated buffer */
-        (void)memcpy(p->payload, (uint8_t *)hcdc->RxBuffer, (uint16_t)hcdc->RxLength);
+    if (p != NULL) {
+        memcpy(p->payload, (uint8_t *)hcdc->RxBuffer, (uint16_t)hcdc->RxLength);
         p->len = (uint16_t)hcdc->RxLength;
     }
 
@@ -70,173 +37,147 @@ static struct pbuf *low_level_input(struct netif *pnetif)
 }
 
 
-static err_t low_level_output(struct netif *netif, struct pbuf *p)
+static err_t ll_output_cb(__attribute__((unused)) struct netif *netif, struct pbuf *p)
 {
-    struct pbuf *q;
-    uint8_t *pdata;
-    uint32_t Trials = CDC_ECM_MAX_TX_WAIT_TRIALS;
-    USBD_CDC_ECM_HandleTypeDef *hcdc = (USBD_CDC_ECM_HandleTypeDef*) (USBD_Device.pClassData);
-
-    UNUSED(netif);
-
-    CONSOLE_LOG("Packet out");
+    USBD_CDC_ECM_HandleTypeDef *hcdc = (USBD_CDC_ECM_HandleTypeDef *)USBD_Device.pClassData;
+    uint8_t *pdata = hcdc->TxBuffer;
+    uint32_t try = 1000000;
 
     /* Check if the TX State is not busy */
-    while ((hcdc->TxState != 0U) && (Trials > 0U))
-    {
-        Trials--;
+    while ((hcdc->TxState != 0) && (try > 0)) {
+        try--;
     }
 
     /* If no success getting the TX state ready, return error */
-    if (Trials == 0U)
-    {
-        return (err_t)ERR_USE;
+    if (try == 0) {
+        return ERR_USE;
     }
 
-    pdata = hcdc->TxBuffer;
     hcdc->TxLength = 0;
 
-    for(q = p; q != NULL; q = q->next)
-    {
-        (void)memcpy(pdata, q->payload, q->len);
-        pdata += q->len;
-        hcdc->TxLength += q->len;
+    for (struct pbuf *curr = p; curr != NULL; curr = curr->next) {
+        memcpy(pdata, curr->payload, curr->len);
+        pdata += curr->len;
+        hcdc->TxLength += curr->len;
     }
 
-    /* Set the TX buffer information */
-    (void)USBD_CDC_ECM_SetTxBuffer(&USBD_Device, hcdc->TxBuffer, (uint16_t)hcdc->TxLength);
+    USBD_CDC_ECM_SetTxBuffer(&USBD_Device, hcdc->TxBuffer, (uint16_t)hcdc->TxLength);
 
-    /* Start transmitting the Tx buffer */
-    if(USBD_CDC_ECM_TransmitPacket(&USBD_Device) == (uint8_t)USBD_OK)
-    {
-        return (err_t)ERR_OK;
+    if (USBD_CDC_ECM_TransmitPacket(&USBD_Device)) {
+        return ERR_USE;
     }
 
-    return (err_t)ERR_USE;
+    return ERR_OK;
 }
 
 
-static void process_packet(void const *arg)
-{
-    err_t err;
-    struct pbuf *p;
-    struct netif *pnetif = (struct netif *)arg;
-
-    CONSOLE_LOG("lwip thread running");
-
-    while(true) {
-        osal_semaphore_wait(sem, OSAL_MAX_TIMEOUT);
-
-        // TODO Тред создаётся раньше, чем инициализируется USBD_Device.pClassData, по этому нельзя один раз
-        //      запомнить адрес и использовать его. Нужно подумать, нормально ли это
-        USBD_CDC_ECM_HandleTypeDef *hcdc = (USBD_CDC_ECM_HandleTypeDef*) (USBD_Device.pClassData);
-
-        /* move received packet into a new pbuf */
-        p = low_level_input(pnetif);
-
-        /* no packet could be read, silently ignore this */
-        if (p == NULL)
-        {
-            CONSOLE_LOG("Can't read packet");
-            goto proceed;
-        }
-
-        /* entry point to the LwIP stack */
-        err = pnetif->input(p, pnetif);
-
-        if (err != (err_t)ERR_OK)
-        {
-            LWIP_DEBUGF(NETIF_DEBUG, ("IP input error\n"));
-            (void)pbuf_free(p);
-            p = NULL;
-        }
-
-proceed:
-        /* Reset the Received buffer length to zero for next transfer */
-        hcdc->RxLength = 0U;
-        hcdc->RxState = 0U;
-
-        /* Prepare Out endpoint to receive next packet in current/new frame */
-        (void)USBD_LL_PrepareReceive(&USBD_Device, CDC_ECM_OUT_EP,
-                                     (uint8_t*)(hcdc->RxBuffer), hcdc->MaxPcktLen);
-
-        /* Free the allocated buffer :
-            The allocated buffer is freed by low layer ethernet functions.
-        */
-    }
-}
-
-
-static void check_timeouts(const void *args)
-{
-    while (true) {
-        sys_check_timeouts();
-        osal_thread_sleep(10);
-    }
-}
-
-
-static err_t out(struct netif *netif, struct pbuf *q, const ip4_addr_t *ipaddr)
+static err_t netif_out_cb(struct netif *netif, struct pbuf *q, const ip4_addr_t *ipaddr)
 {
     CONSOLE_LOG("Outgoing packet");
     return etharp_output(netif, q, ipaddr);
 }
 
 
-err_t ethernetif_init(struct netif *netif)
+static err_t netif_init_cb(struct netif *netif)
 {
     LWIP_ASSERT("netif != NULL", (netif != NULL));
 
-    CONSOLE_LOG("Net iface init");
+    strcpy(netif->name, NETIF_NAME);
 
-    gpio_init(GPIO_ORANGE_LED);
-    gpio_init(GPIO_GREEN_LED);
+    netif->hwaddr_len = ETH_HWADDR_LEN;
 
-    netif->name[0] = 's';
-    netif->name[1] = 't';
+    netif->hwaddr[0] = MAC_ADDR0;
+    netif->hwaddr[1] = MAC_ADDR1;
+    netif->hwaddr[2] = MAC_ADDR2;
+    netif->hwaddr[3] = MAC_ADDR3;
+    netif->hwaddr[4] = MAC_ADDR4;
+    netif->hwaddr[5] = MAC_ADDR5;
 
-    /* We directly use etharp_output() here to save a function call.
-    * You can instead declare your own function an call etharp_output()
-    * from it if you have to do some checks before sending (e.g. if link
-    * is available...) */
-    netif->output = out;
-    netif->linkoutput = low_level_output;
+    netif->mtu = 1500;
 
-    /* initialize the hardware */
-    low_level_init(netif);
+    netif->output = netif_out_cb; // можно использовать обёртку или непосредственно передать etharp_output()
+    netif->linkoutput = ll_output_cb;
+
+    netif->flags |= NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP;
 
     return (err_t)ERR_OK;
 }
 
 
-static void net_iface_setup(void)
+static void main_netif_setup(void)
 {
     ip_addr_t ipaddr;
     ip_addr_t netmask;
     ip_addr_t gw;
-    
+
     IP_ADDR4(&ipaddr, IP_ADDR0, IP_ADDR1, IP_ADDR2, IP_ADDR3);
     IP_ADDR4(&netmask, NETMASK_ADDR0, NETMASK_ADDR1, NETMASK_ADDR2, NETMASK_ADDR3);
     IP_ADDR4(&gw, GW_ADDR0, GW_ADDR1, GW_ADDR2, GW_ADDR3);
-    
-    netif_add(&main_netif, &ipaddr, &netmask, &gw, NULL, &ethernetif_init, &tcpip_input);
-    
-    /*  Registers the default network interface. */
-    netif_set_default(&main_netif);
 
+    netif_add(&main_netif, &ipaddr, &netmask, &gw, NULL, &netif_init_cb, &tcpip_input);
+    netif_set_default(&main_netif);
     netif_set_up(&main_netif);
     netif_set_link_up(&main_netif);
-    
-    // if (netif_is_link_up(&main_netif))
-    // {
-    //     /* When the netif is fully configured this function must be called.*/
-    //     netif_set_up(&main_netif);
-    // }
-    // else
-    // {
-    //     /* When the netif link is down this function must be called */
-    //     netif_set_down(&main_netif);
-    // }
+
+    CONSOLE_LOG("Host static IP: %s",
+        ip4addr_ntoa((const ip4_addr_t *)&main_netif.ip_addr));
+}
+
+
+static void net_event_loop(void const *arg)
+{
+    err_t err;
+    struct pbuf *p;
+    struct netif *pnetif = (struct netif *)arg;
+    USBD_CDC_ECM_HandleTypeDef *hcdc = NULL;
+
+    CONSOLE_LOG("Net event loop running");
+
+    while(true) {
+        uint32_t flags = 0;
+
+        osal_thread_notify_wait(flags, OSAL_MAX_TIMEOUT);
+
+        CONSOLE_LOG("new flags: 0x%lx", flags);
+
+        if (flags & NET_EVENT_LINK_UP) {
+            netif_set_link_up(&main_netif);
+            gpio_set(GPIO_GREEN_LED);
+            hcdc = USBD_Device.pClassData;
+        }
+
+        if (flags & NET_EVENT_LINK_DOWN) {
+            netif_set_link_down(&main_netif);
+            gpio_reset(GPIO_GREEN_LED);
+            hcdc = NULL;
+        }
+
+        if (flags & NET_EVENT_NEW_PACKET) {
+            LOCK_TCPIP_CORE();
+
+            p = ll_input(pnetif);
+            if (p == NULL) {
+                CONSOLE_ERROR("Can't read packet");
+                goto proceed;
+            }
+
+            err = pnetif->input(p, pnetif);
+            if (err) {
+                CONSOLE_ERROR("lwip input error");
+                pbuf_free(p);
+                p = NULL;
+            }
+
+            UNLOCK_TCPIP_CORE();
+
+        proceed:
+            hcdc->RxLength = 0;
+            hcdc->RxState = 0;
+
+            USBD_LL_PrepareReceive(&USBD_Device, CDC_ECM_OUT_EP,
+                                   (uint8_t *)hcdc->RxBuffer, hcdc->MaxPcktLen);
+        }
+    }
 }
 
 
@@ -248,64 +189,27 @@ static void net_init_done(void *arg)
 
 void net_init(void)
 {
-    sem = osal_semaphore_create();
-    if (sem == NULL) {
-        CONSOLE_LOG("Can't create semaphore");
+    gpio_init(GPIO_ORANGE_LED);
+    gpio_init(GPIO_GREEN_LED);
+
+    thread = osal_thread_create("lwip_input",
+                                net_event_loop,
+                                1024,
+                                THREAD_PRIORITY_NORMAL,
+                                &main_netif);
+    if (thread == NULL) {
+        CONSOLE_ERROR("Can't create lwip_input thread");
         assert(0);
     }
 
-    #if 0
-    if (osal_thread_create("lwip", process_packet, 1024, THREAD_PRIORITY_NORMAL, &main_netif) == NULL) {
-        CONSOLE_ERROR("Can't create lwip thread");
-        assert(0);
-    }
-
-    if (osal_thread_create("lwip timeouts", check_timeouts, 256, THREAD_PRIORITY_NORMAL, NULL) == NULL) {
-        CONSOLE_ERROR("Can't create lwip timeouts thread");
-        assert(0);
-    }
-    #endif
-
+    // lwip stack init
     tcpip_init(net_init_done, NULL);
-    net_iface_setup();
-    CONSOLE_LOG("Host static IP: %s", ip4addr_ntoa((const ip4_addr_t *)&main_netif.ip_addr));
+
+    main_netif_setup();
 }
 
 
-void ethernetif_notify_conn_changed(struct netif *netif)
+void net_notify(NET_EVENT_FLAG_T event)
 {
-    /* NOTE : This is function clould be implemented in user file
-                when the callback is needed,
-    */
-    UNUSED(netif);
+    osal_thread_notify(thread, event);
 }
-
-
-void ethernetif_update_config(struct netif *netif)
-{
-    CONSOLE_LOG("Update net iface callback");
-
-    if(netif_is_link_up(netif) == 1U)
-    {
-        netif_set_up(netif);
-        gpio_set(GPIO_GREEN_LED);
-    }
-    else
-    {
-        gpio_reset(GPIO_GREEN_LED);
-    }
-
-    ethernetif_notify_conn_changed(netif);
-}
-
-
-void ethernetif_ready_cb(void)
-{
-    osal_semaphore_release(sem);
-}
-
-
-// u32_t sys_now(void)
-// {
-//   return HAL_GetTick();
-// }
