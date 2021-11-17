@@ -12,6 +12,7 @@
 typedef void (*osal_thread_func_t)(void const *);
 typedef TaskHandle_t osal_thread_t;
 
+
 // -- Semaphore
 typedef SemaphoreHandle_t osal_semaphore_t;
 

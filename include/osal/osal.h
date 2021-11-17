@@ -1,6 +1,7 @@
 #pragma once
 
-#include <osal/freertos_port.h>
+#include <stdint.h>
+#include "osal/freertos_port.h"
 
 
 #define OSAL_MAX_TIMEOUT        (UINT32_MAX)
@@ -35,6 +36,8 @@ int osal_thread_resume(osal_thread_t thread);
 int osal_thread_stop_all(void);
 void osal_thread_sleep(uint32_t ms);
 void osal_thread_change_priority(osal_thread_t thread, OSAL_THREAD_PRIORITY_T priority);
+int osal_thread_notify(osal_thread_t thread, uint32_t flags);
+int osal_thread_notify_wait(uint32_t event_flags, uint32_t ms_timeout);
 void osal_thread_info_all(void *info);
 
 
