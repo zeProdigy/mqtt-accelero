@@ -11,8 +11,8 @@ set(LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/STM32F407VGTx_FLASH.ld")
 add_definitions(-DSTM32F407xx)
 add_definitions(-DUSE_FULL_LL_DRIVER)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O0 -Wall --std=gnu99")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -Wall --std=gnu++11")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O0 -Wall --std=gnu99 -fdiagnostics-color=always")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -Wall --std=gnu++11 -fdiagnostics-color=always")
 
 set(CMAKE_EXE_LINKER_FLAGS "-T ${LINKER_SCRIPT}")
 
