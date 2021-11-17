@@ -1,11 +1,13 @@
 #include "app/shell/shell.h"
 #include "app/shell/hello_test.h"
 #include "app/shell/rtc_test.h"
+#include "app/shell/mqtt_test.h"
 
 
 const shell_command_t shell_commands[] = {
     {"hello", hello_test, "just print hello"},
     {"rtc", rtc_test, "print time"},
+    {"mqtt", mqtt_test, "run mqtt test"},
 };
 
 const size_t shell_commands_num = (sizeof(shell_commands) / sizeof(shell_command_t));
