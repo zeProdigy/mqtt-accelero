@@ -92,7 +92,7 @@ file(GLOB_RECURSE LIB_USB_SRC
 )
 
 add_library(st-usb STATIC ${LIB_USB_SRC})
-target_link_libraries(st-usb st-hal tiny-printf lwipcore)
+target_link_libraries(st-usb st-hal tiny-printf)
 
 target_compile_definitions(st-usb PUBLIC USE_USB_FS)
 target_include_directories(st-usb PRIVATE
@@ -114,7 +114,7 @@ add_executable(${PROJECT_NAME} ${APP_SRC})
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${LWIP_INCLUDE_DIRS})
 
-target_link_libraries(${PROJECT_NAME} system st-hal st-usb osal)
+target_link_libraries(${PROJECT_NAME} system st-hal st-usb osal lwipallapps)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".elf")
 
