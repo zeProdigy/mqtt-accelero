@@ -1,23 +1,17 @@
 #pragma once
 
 #include <stdint.h>
-#include <stdbool.h>
 
 #include "system/gpio.h"
+#include "system/nvic.h"
 #include "system/uart_list.h"
 #include "hal/stm32f4xx.h"
 #include "osal/osal.h"
 
-struct irq {
-    bool enable;
-    IRQn_Type line;
-    uint8_t main_prio;
-    uint8_t sub_prio;
-};
 
 typedef struct {
     UART_HandleTypeDef handler;
-    struct irq irq;
+    nvic_conf_t irq;
     uint32_t clk;
     GPIO_ID_T tx_pin_id;
     GPIO_ID_T rx_pin_id;
