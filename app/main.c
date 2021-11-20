@@ -23,7 +23,7 @@ void print_banner(void)
   / ___ \\| . \\  | |\\  |  __/ |_| |__| (_| | | | (_| |\r\n\
  /_/   \\_\\_|\\_\\ |_| \\_|\\___|\\__|\\____\\__,_|_|  \\__,_|";
 
-    dbgio_printf("%s\r\n", banner);
+    CONSOLE_OUT("%s\r\n", banner);
 }
 
 
@@ -44,22 +44,8 @@ void cmd_line(__attribute__((unused)) void const *params)
 }
 
 
-int main(void) {
-    cpu_clock_setup();
-    cpu_systick_setup();
-    cpu_features_setup();
-
-    uart_init(DEBUG_UART, 115200);
-
-    if (rtc_setup()) {
-        CONSOLE_LOG("Can't init RTC");
-    }
-
-    uptimer_setup();
-    uptimer_start();
-
-    print_banner();
-
+void app(const void *args)
+{
     net_init();
 
     if (usb_ecm_init()) {
@@ -72,6 +58,30 @@ int main(void) {
 
     if (osal_thread_create("cmd_line", cmd_line, 512, THREAD_PRIORITY_NORMAL, NULL) == NULL) {
         CONSOLE_ERROR("Can't create cmd_line thread");
+    }
+
+    osal_thread_delete(osal_thread_self());
+}
+
+
+int main(void) {
+    cpu_clock_setup();
+    cpu_systick_setup();
+    cpu_features_setup();
+
+    dbgio_init();
+
+    if (rtc_setup()) {
+        CONSOLE_LOG("Can't init RTC");
+    }
+
+    uptimer_setup();
+    uptimer_start();
+
+    print_banner();
+
+    if (osal_thread_create("app", app, 256, THREAD_PRIORITY_NORMAL, NULL) == NULL) {
+        CONSOLE_ERROR("Can't create app thread");
     }
 
     osal_kernel_start();

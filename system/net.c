@@ -16,7 +16,7 @@
 
 struct netif main_netif;
 extern USBD_HandleTypeDef USBD_Device; // extern не круто
-static osal_thread_t thread;
+static osal_thread_t thread = NULL;
 
 
 static struct pbuf *ll_input(__attribute__((unused)) struct netif *pnetif)
@@ -134,9 +134,7 @@ static void net_event_loop(void const *arg)
     CONSOLE_LOG("Net event loop running");
 
     while(true) {
-        uint32_t flags = 0;
-
-        osal_thread_notify_wait(flags, OSAL_MAX_TIMEOUT);
+        uint32_t flags = osal_thread_notify_wait(NET_EVENT_ANY, OSAL_MAX_TIMEOUT);
 
         CONSOLE_LOG("new flags: 0x%lx", flags);
 
@@ -192,6 +190,11 @@ void net_init(void)
     gpio_init(GPIO_ORANGE_LED);
     gpio_init(GPIO_GREEN_LED);
 
+    // lwip stack init
+    tcpip_init(net_init_done, NULL);
+
+    main_netif_setup();
+
     thread = osal_thread_create("lwip_input",
                                 net_event_loop,
                                 1024,
@@ -201,11 +204,6 @@ void net_init(void)
         CONSOLE_ERROR("Can't create lwip_input thread");
         assert(0);
     }
-
-    // lwip stack init
-    tcpip_init(net_init_done, NULL);
-
-    main_netif_setup();
 }
 
 
