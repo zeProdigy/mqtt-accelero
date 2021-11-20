@@ -30,7 +30,7 @@ osal_thread_t osal_thread_create(const char *name,
                                  stack_size,
                                  params,
                                  to_freertos_priority(prio),
-                                 xHandle);
+                                 &xHandle);
 
     return (ret == pdPASS) ? xHandle : NULL;
 }
@@ -90,21 +90,25 @@ void osal_thread_change_priority(osal_thread_t thread, OSAL_THREAD_PRIORITY_T pr
 
 int osal_thread_notify(osal_thread_t thread, uint32_t flags)
 {
+    BaseType_t ret;
+
     assert(thread);
     assert(flags > 0);
 
     if (IN_ISR()) {
         BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-        BaseType_t ret = xTaskNotifyFromISR(thread, flags, eSetBits,
-                                            &xHigherPriorityTaskWoken);
-        return (ret == pdPASS) ? 0 : 1;
+        ret = xTaskNotifyFromISR(thread, flags, eSetBits,
+                                 &xHigherPriorityTaskWoken);
+        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
     } else {
-        return (xTaskNotify(thread, flags, eSetBits) == pdPASS) ? 0 : 1;
+        ret = xTaskNotify(thread, flags, eSetBits);
     }
+
+    return (ret == pdPASS) ? 0 : 1;
 }
 
 
-int osal_thread_notify_wait(uint32_t event_flags, uint32_t ms_timeout)
+uint32_t osal_thread_notify_wait(uint32_t event_flags, uint32_t ms_timeout)
 {
     assert(event_flags > 0);
 

@@ -37,7 +37,7 @@ int osal_thread_stop_all(void);
 void osal_thread_sleep(uint32_t ms);
 void osal_thread_change_priority(osal_thread_t thread, OSAL_THREAD_PRIORITY_T priority);
 int osal_thread_notify(osal_thread_t thread, uint32_t flags);
-int osal_thread_notify_wait(uint32_t event_flags, uint32_t ms_timeout);
+uint32_t osal_thread_notify_wait(uint32_t event_flags, uint32_t ms_timeout);
 void osal_thread_info_all(void *info);
 
 
@@ -50,6 +50,6 @@ int osal_semaphore_delete(osal_semaphore_t sem);
 
 // -- Mutex
 osal_mutex_t osal_mutex_create(void);
-int osal_mutex_wait(osal_mutex_t mutex, uint32_t ms_timeout);
-int osal_mutex_release(osal_mutex_t mutex);
+int osal_mutex_lock(osal_mutex_t mutex, uint32_t ms_timeout);
+int osal_mutex_unlock(osal_mutex_t mutex);
 int osal_mutex_delete(osal_mutex_t mutex);
