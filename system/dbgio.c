@@ -7,12 +7,35 @@
 #include "osal/osal.h"
 
 
-void dbgio_printf(const char *format, ...)
+static osal_mutex_t mut;
+
+
+int dbgio_init(void)
+{
+    mut = osal_mutex_create();
+    if (mut == NULL) {
+        return 1;
+    }
+
+    return uart_init(DEBUG_UART, 115200);
+}
+
+
+void dbgio_printf(bool use_mutex, const char *format, ...)
 {
     va_list args;
+
+    if (use_mutex) {
+        osal_mutex_lock(mut, OSAL_MAX_TIMEOUT);
+    }
+
     va_start(args, format);
     vprintf(format, args);
     va_end(args);
+
+    if (use_mutex) {
+        osal_mutex_unlock(mut);
+    }
 }
 
 
@@ -25,6 +48,10 @@ void dbgio_printf_extended(bool use_mutex,
                            const char *format, ...)
 {
     va_list args;
+
+    if (use_mutex) {
+        osal_mutex_lock(mut, OSAL_MAX_TIMEOUT);
+    }
 
     if (timestamp) {
         struct timeval time;
@@ -50,6 +77,10 @@ void dbgio_printf_extended(bool use_mutex,
 
     if (new_line) {
         printf("\r\n");
+    }
+
+    if (use_mutex) {
+        osal_mutex_unlock(mut);
     }
 }
 

@@ -4,13 +4,13 @@
 
 static void print_cb(const char *str)
 {
-    dbgio_printf("%s", str);
+    CONSOLE_OUT("%s", str);
 }
 
 
 static void sigint_handler(void)
 {
-    dbgio_printf("Catch ^C!\r\n");
+    CONSOLE_OUT("Catch ^C!\r\n");
 }
 
 
