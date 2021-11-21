@@ -6,6 +6,7 @@ const shell_command_t shell_commands[] = {
     {"hello", hello_test, "just print hello"},
     {"rtc", rtc_test, "print time"},
     {"mqtt", mqtt_test, "run mqtt test"},
+    {"ping", ping_test, "ping"},
 };
 
 const size_t shell_commands_num = (sizeof(shell_commands) / sizeof(shell_command_t));
