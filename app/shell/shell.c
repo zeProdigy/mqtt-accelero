@@ -1,7 +1,5 @@
 #include "app/shell/shell.h"
-#include "app/shell/hello_test.h"
-#include "app/shell/rtc_test.h"
-#include "app/shell/mqtt_test.h"
+#include "app/shell/handlers.h"
 
 
 const shell_command_t shell_commands[] = {
