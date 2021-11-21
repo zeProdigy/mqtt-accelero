@@ -1,14 +1,17 @@
+#include <string.h>
+
 #include "lwip/apps/mqtt.h"
 #include "system/dbgio.h"
 
 
 static mqtt_client_t *mqtt_client;
+static uint8_t test_counter = 0;
 
 static ip_addr_t ip_addr = IPADDR4_INIT_BYTES(192, 168, 0, 1);
 
 static const struct mqtt_connect_client_info_t mqtt_client_info = {
-    "mqtt_test",
-    NULL, /* user */
+    "id_1",
+    "dev_board", /* user */
     NULL, /* pass */
     100,  /* keep alive */
     NULL, /* will_topic */
@@ -61,35 +64,47 @@ static void connection_cb(mqtt_client_t *client,
         ci->client_id, (int)status);
 
     if (status == MQTT_CONNECT_ACCEPTED) {
-        mqtt_sub_unsub(client,
-                       "topic_qos1", 1,
-                       request_cb, LWIP_CONST_CAST(void*, ci),
-                       1);
-        mqtt_sub_unsub(client,
-                       "topic_qos0", 0,
-                       request_cb, LWIP_CONST_CAST(void*, ci),
-                       1);
+        mqtt_subscribe(client,
+                       "$SYS/broker/version", 1,
+                       request_cb, LWIP_CONST_CAST(void*, ci));
     }
 }
 
 
 int mqtt_test(int argc, char *argv[])
 {
-    mqtt_client = mqtt_client_new();
-    if (mqtt_client == NULL) {
-        CONSOLE_LOG("Can't alloc mqtt client struct");
-        return 1;
+    const char *cmd = argv[1];
+
+    CONSOLE_LOG("cmd: %s", cmd);
+
+    if (strcmp(cmd, "init") == 0) {
+        mqtt_client = mqtt_client_new();
+        if (mqtt_client == NULL) {
+            CONSOLE_LOG("Can't alloc mqtt client struct");
+            return 1;
+        }
+
+        mqtt_set_inpub_callback(mqtt_client,
+                                incoming_publish_cb,
+                                incoming_data_cb,
+                                LWIP_CONST_CAST(void*, &mqtt_client_info));
+
+        mqtt_client_connect(mqtt_client,
+                            &ip_addr, MQTT_PORT,
+                            connection_cb, LWIP_CONST_CAST(void*, &mqtt_client_info),
+                            &mqtt_client_info);
     }
-
-    mqtt_set_inpub_callback(mqtt_client,
-                            incoming_publish_cb,
-                            incoming_data_cb,
-                            LWIP_CONST_CAST(void*, &mqtt_client_info));
-
-    mqtt_client_connect(mqtt_client,
-                        &ip_addr, MQTT_PORT,
-                        connection_cb, LWIP_CONST_CAST(void*, &mqtt_client_info),
-                        &mqtt_client_info);
+    else if (strcmp(cmd, "pub") == 0) {
+        test_counter++;
+        char payload[4] = {0};
+        sprintf(payload, "%3d", test_counter);
+        mqtt_publish(mqtt_client, "counter",
+                     &payload, strlen(payload),
+                     1, 1,
+                     request_cb, LWIP_CONST_CAST(void*, &mqtt_client_info));
+    } else {
+        CONSOLE_LOG("Unsupported cmd");
+    }
 
     return 0;
 }
