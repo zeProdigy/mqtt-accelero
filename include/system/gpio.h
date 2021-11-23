@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "system/gpio_list.h"
 #include "hal/stm32f4xx.h"
@@ -18,3 +19,4 @@ void gpio_deinit(GPIO_ID_T id);
 void gpio_set(GPIO_ID_T id);
 void gpio_reset(GPIO_ID_T id);
 void gpio_toggle(GPIO_ID_T id);
+bool gpio_get(GPIO_ID_T id);

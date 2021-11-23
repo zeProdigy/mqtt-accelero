@@ -70,4 +70,55 @@ gpio_conf_t gpio_list[] = {
         },
         .clk_en = RCC_AHB1ENR_GPIOAEN
     },
+
+    // ACCELERO_SPI_SCLK
+    {
+        .base = GPIOA,
+        .conf = {
+            .Pin = GPIO_PIN_5,
+            .Mode = GPIO_MODE_AF_PP,
+            .Pull = GPIO_PULLDOWN,
+            .Speed = GPIO_SPEED_FREQ_VERY_HIGH,
+            .Alternate = GPIO_AF5_SPI1,
+        },
+        .clk_en = RCC_AHB1ENR_GPIOAEN
+    },
+
+    // ACCELERO_SPI_MISO
+    {
+        .base = GPIOA,
+        .conf = {
+            .Pin = GPIO_PIN_6,
+            .Mode = GPIO_MODE_AF_PP,
+            .Pull = GPIO_PULLDOWN,
+            .Speed = GPIO_SPEED_FREQ_VERY_HIGH,
+            .Alternate = GPIO_AF5_SPI1,
+        },
+        .clk_en = RCC_AHB1ENR_GPIOAEN
+    },
+
+    // ACCELERO_SPI_MOSI
+    {
+        .base = GPIOA,
+        .conf = {
+            .Pin = GPIO_PIN_7,
+            .Mode = GPIO_MODE_AF_PP,
+            .Pull = GPIO_PULLDOWN,
+            .Speed = GPIO_SPEED_FREQ_VERY_HIGH,
+            .Alternate = GPIO_AF5_SPI1,
+        },
+        .clk_en = RCC_AHB1ENR_GPIOAEN
+    },
+
+    // ACCELERO_SPI_CS
+    {
+        .base = GPIOE,
+        .conf = {
+            .Pin = GPIO_PIN_3,
+            .Mode = GPIO_MODE_OUTPUT_PP,
+            .Pull = GPIO_NOPULL,
+            .Speed = GPIO_SPEED_FREQ_VERY_HIGH,
+        },
+        .clk_en = RCC_AHB1ENR_GPIOEEN
+    },
 };
