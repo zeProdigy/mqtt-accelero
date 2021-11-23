@@ -14,6 +14,7 @@ typedef struct {
 
 
 void gpio_init(GPIO_ID_T id);
+void gpio_deinit(GPIO_ID_T id);
 void gpio_set(GPIO_ID_T id);
 void gpio_reset(GPIO_ID_T id);
 void gpio_toggle(GPIO_ID_T id);

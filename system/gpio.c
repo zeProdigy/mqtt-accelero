@@ -9,7 +9,13 @@ void gpio_init(GPIO_ID_T id)
     gpio_conf_t *gpio = (gpio_conf_t *)&gpio_list[id];
     SET_BIT(RCC->AHB1ENR, gpio->clk_en);
     HAL_GPIO_Init(gpio->base, &gpio->conf);
-    
+}
+
+
+void gpio_deinit(GPIO_ID_T id)
+{
+    gpio_conf_t *gpio = (gpio_conf_t *)&gpio_list[id];
+    HAL_GPIO_DeInit(gpio->base, gpio->conf.Pin);
 }
 
 
