@@ -18,7 +18,7 @@ uart_conf_t uart_list[] = {
         .irq = {
             .enable = true,
             .line = USART2_IRQn,
-            .main_prio = 6,
+            .main_prio = 7,
             .sub_prio = 0,
         },
         .clk = RCC_APB1ENR_USART2EN,
