@@ -136,8 +136,6 @@ static void net_event_loop(void const *arg)
     while(true) {
         uint32_t flags = osal_thread_notify_wait(NET_EVENT_ANY, OSAL_MAX_TIMEOUT);
 
-        CONSOLE_LOG("new flags: 0x%lx", flags);
-
         if (flags & NET_EVENT_LINK_UP) {
             netif_set_link_up(&main_netif);
             gpio_set(GPIO_GREEN_LED);
