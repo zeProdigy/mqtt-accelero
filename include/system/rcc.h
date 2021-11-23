@@ -7,6 +7,7 @@
 
 
 typedef struct {
-    uint32_t reg;
+    volatile uint32_t *clk_reg;
+    volatile uint32_t *rst_reg;
     uint32_t en_bit;
-} clk_conf_t;
+} rcc_conf_t;
