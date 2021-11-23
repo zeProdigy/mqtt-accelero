@@ -14,15 +14,20 @@ spi_conf_t spi_list[] = {
             }
         },
         .irq = {
-
+            .enable = true,
+            .line = SPI1_IRQn,
+            .main_prio = 6,
+            .sub_prio = 0,
         },
         .rcc = {
-
+            .clk_reg = &RCC->APB2ENR,
+            .rst_reg = &RCC->APB2RSTR,
+            .en_bit = RCC_APB2ENR_SPI1EN,
         },
-        .cs_pin = ,
-        .miso_pin = ,
-        .mosi_pin = ,
-        .sclk_pin = ,
+        .cs_pin   = ACCELERO_SPI_CS,
+        .miso_pin = ACCELERO_SPI_MISO,
+        .mosi_pin = ACCELERO_SPI_MOSI,
+        .sclk_pin = ACCELERO_SPI_SCLK,
     }
 };
 

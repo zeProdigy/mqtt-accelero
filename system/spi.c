@@ -15,6 +15,8 @@ int spi_init(SPI_ID_T id)
     gpio_init(spi->mosi_pin);
     gpio_init(spi->sclk_pin);
 
+    spi_cs_disable(id);
+
     CLEAR_BIT(*spi->rcc.rst_reg, spi->rcc.en_bit);
     SET_BIT(*spi->rcc.clk_reg, spi->rcc.en_bit);
 
