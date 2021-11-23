@@ -2,6 +2,7 @@
 #include "system/timer.h"
 #include "system/uptimer.h"
 #include "system/usb_ecm.h"
+#include "system/spi.h"
 #include "osal/osal.h"
 
 
@@ -32,4 +33,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htimer)
 void OTG_FS_IRQHandler(void)
 {
     usb_ecm_irq_handler();
+}
+
+
+void SPI1_IRQHandler(void)
+{
+    spi_irq_handler(ACCELERO_SPI);
 }
