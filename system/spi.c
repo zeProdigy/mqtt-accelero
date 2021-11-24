@@ -39,8 +39,8 @@ int spi_init(SPI_ID_T id)
         return 1;
     }
 
-    HAL_NVIC_SetPriority(spi->irq.line, spi->irq.main_prio, spi->irq.sub_prio);
-    HAL_NVIC_EnableIRQ(spi->irq.line);
+    //HAL_NVIC_SetPriority(spi->irq.line, spi->irq.main_prio, spi->irq.sub_prio);
+    //HAL_NVIC_EnableIRQ(spi->irq.line);
 
     return 0;
 }
@@ -137,6 +137,24 @@ int spi_exchange_interrupt(SPI_ID_T id,
     ret = osal_semaphore_wait(spi->rx_sem, timeout);
     if (ret) {
         CONSOLE_ERROR("Timeout rx reached");
+        return 1;
+    }
+
+    return 0;
+}
+
+
+int spi_exchange_polling(SPI_ID_T id,
+                         const void *out_data, void *in_buf, size_t size)
+{
+    spi_conf_t *spi = (spi_conf_t *)&spi_list[id];
+    uint32_t timeout = 500;
+    int ret;
+
+    ret = HAL_SPI_TransmitReceive(&spi->handler,
+                                  (uint8_t *)out_data, (uint8_t *)in_buf, size, timeout);
+    if (ret) {
+        CONSOLE_LOG("SPI transmit/receive timeout reached");
         return 1;
     }
 

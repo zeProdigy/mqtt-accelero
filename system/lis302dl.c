@@ -5,6 +5,7 @@
 #define LIS302DL_ID     0x3b
 
 #define WHO_I_AM_REG    0x0f
+#define STATUS_REG      0x27
 
 
 static inline uint8_t make_command(bool is_read, bool is_multiple, uint8_t addr)
@@ -17,20 +18,22 @@ static uint8_t get_id(void)
 {
     uint8_t id = 0;
     uint8_t cmd = make_command(true, false, WHO_I_AM_REG);
+    uint8_t dummy;
 
     spi_cs_enable(ACCELERO_SPI);
 
-    if (spi_write_interrupt(ACCELERO_SPI, &cmd, sizeof(cmd))) {
+    if (spi_exchange_polling(ACCELERO_SPI, &cmd, &dummy, sizeof(cmd))) {
         goto out;
     }
 
-    if (spi_read_interrupt(ACCELERO_SPI, &id, sizeof(id))) {
+    dummy = 0;
+
+    if (spi_exchange_polling(ACCELERO_SPI, &dummy, &id, sizeof(id))) {
         goto out;
     }
-
-    spi_cs_disable(ACCELERO_SPI);
 
 out:
+    spi_cs_disable(ACCELERO_SPI);
     return id;
 }
 
