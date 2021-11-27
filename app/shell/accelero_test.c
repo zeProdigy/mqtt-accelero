@@ -68,8 +68,26 @@ int accelero_test(int argc, char *argv[])
         }
         uint8_t addr = strtol(argv[2], NULL, 16);
         uint8_t content;
-        lis3dsc_read_reg(addr, &content);
+        lis3dsh_read_reg(addr, &content);
         CONSOLE_LOG("reg 0x%x: 0x%x", addr, content);
+    } else if (strcmp(cmd, "acc") == 0) {
+        lis3dsh_acc_t data;
+        while(true) {
+            if (lis3dsh_get_acc(&data)) {
+                CONSOLE_ERROR("Read data error");
+                return 1;
+            }
+            CONSOLE_LOG("x: %f y: %f z: %f", data.acc_x, data.acc_y, data.acc_z);
+        }
+    } else if (strcmp(cmd, "tilt") == 0) {
+        lis3dsh_tilt_t data;
+        while(true) {
+            if (lis3dsh_get_tilt(&data)) {
+                CONSOLE_ERROR("Read data error");
+                return 1;
+            }
+            CONSOLE_LOG("pitch: %f roll: %f", data.pitch, data.roll);
+        }
     } else {
         CONSOLE_LOG("Unsupported cmd");
     }
