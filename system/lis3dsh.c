@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <math.h>
 
 #include "system/lis3dsh.h"
 #include "system/dbgio.h"
@@ -14,15 +15,25 @@
 #define CONTROL_5_REG   0x24
 #define CONTROL_6_REG   0x25
 
+#define OUT_X_L_REG     0x28
+#define OUT_X_H_REG     0x29
+#define OUT_Y_L_REG     0x2A
+#define OUT_Y_H_REG     0x2B
+#define OUT_Z_L_REG     0x2C
+#define OUT_Z_H_REG     0x2D
+
 
 // Можно было бы таскать коллбэки в контексте и передавать в функции каждый раз, но 
-// мне кажется, нет смысла инстанцировать несколько "аккселерометров" с разными контекстами
-static lis3dsh_callbacks _ctx;
+// мне кажется, нет смысла инстанцировать несколько "акселерометров" с разными контекстами
+static struct {
+    lis3dsh_read_write read_write;
+    float scale;
+} _ctx;
 
 
-static inline uint8_t make_command(bool is_read, bool is_multiple, uint8_t addr)
+static inline uint8_t make_command(bool is_read, uint8_t addr)
 {
-    return (is_read << 7) | (is_multiple << 6) | addr;
+    return (is_read << 7) | addr;
 }
 
 
@@ -38,9 +49,10 @@ int lis3dsh_init(lis3dsh_read_write read_write_cb)
     assert(read_write_cb);
 
     _ctx.read_write = read_write_cb;
+    _ctx.scale = 2000.0;
 
     uint8_t cmd[2];
-    cmd[0] = make_command(false, false, CONTROL_4_REG);
+    cmd[0] = make_command(false, CONTROL_4_REG);
     cmd[1] = 0x67;
 
     read_write(&cmd, sizeof(cmd), NULL, 0);
@@ -51,15 +63,63 @@ int lis3dsh_init(lis3dsh_read_write read_write_cb)
 
 int lis3dsh_get_id(uint8_t *id)
 {
-    uint8_t cmd = make_command(true, false, WHO_I_AM_REG);
+    uint8_t cmd = make_command(true, WHO_I_AM_REG);
     *id = 0;
     return read_write(&cmd, sizeof(cmd), id, sizeof(id));
 }
 
 
-int lis3dsc_read_reg(uint8_t addr, uint8_t *content)
+int lis3dsh_read_reg(uint8_t addr, uint8_t *content)
 {
-    uint8_t cmd = make_command(true, false, addr);
+    uint8_t cmd = make_command(true, addr);
     *content = 0;
     return read_write(&cmd, sizeof(cmd), content, sizeof(*content));
+}
+
+
+static int get_xyz(int16_t *x, int16_t *y, int16_t *z)
+{
+    uint8_t buf[6];
+    uint8_t cmd = make_command(true, OUT_X_L_REG);
+
+    if (read_write(&cmd, sizeof(cmd), buf, sizeof(buf))) {
+        return 1;
+    }
+
+    *x = (buf[1] << 8) | buf[0];
+	*y = (buf[3] << 8) | buf[2];
+	*z = (buf[5] << 8) | buf[4];
+
+    return 0;
+}
+
+
+int lis3dsh_get_acc(lis3dsh_acc_t *out)
+{
+    int16_t x, y, z;
+    
+    if (get_xyz(&x, &y, &z)) {
+        return 1;
+    }
+
+    out->acc_x = x / _ctx.scale;
+    out->acc_y = y / _ctx.scale;
+    out->acc_z = z / _ctx.scale;
+
+    return 0;
+}
+
+
+int lis3dsh_get_tilt(lis3dsh_tilt_t *out)
+{
+    int16_t x, y, z;
+    
+    if (get_xyz(&x, &y, &z)) {
+        return 1;
+    }
+
+    out->pitch = 180 * atan2(y, z) / M_PI;
+	out->roll  = 180 * atan2(x, z) / M_PI;
+
+    return 0;
 }
