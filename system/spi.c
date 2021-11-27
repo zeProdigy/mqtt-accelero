@@ -1,3 +1,5 @@
+#include <assert.h>
+
 #include "system/spi.h"
 #include "system/dbgio.h"
 #include "osal/osal.h"
@@ -145,17 +147,31 @@ int spi_exchange_interrupt(SPI_ID_T id,
 
 
 int spi_exchange_polling(SPI_ID_T id,
-                         const void *out_data, void *in_buf, size_t size)
+                         const void *out_data, size_t out_size,
+                         void *in_buf, size_t in_size)
 {
     spi_conf_t *spi = (spi_conf_t *)&spi_list[id];
     uint32_t timeout = 500;
     int ret;
 
-    ret = HAL_SPI_TransmitReceive(&spi->handler,
-                                  (uint8_t *)out_data, (uint8_t *)in_buf, size, timeout);
-    if (ret) {
-        CONSOLE_LOG("SPI transmit/receive timeout reached");
-        return 1;
+    if (out_size) {
+        assert(out_data);
+
+        ret = HAL_SPI_Transmit(&spi->handler, (uint8_t *)out_data, out_size, timeout);
+        if (ret) {
+            CONSOLE_LOG("SPI transmit timeout reached");
+            return 1;
+        }
+    }
+
+    if (in_size) {
+        assert(in_size);
+
+        ret = HAL_SPI_Receive(&spi->handler, (uint8_t *)in_buf, in_size, timeout);
+        if (ret) {
+            CONSOLE_LOG("SPI receive timeout reached");
+            return 1;
+        }
     }
 
     return 0;

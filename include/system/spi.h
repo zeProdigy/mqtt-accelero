@@ -34,7 +34,8 @@ int spi_read_interrupt(SPI_ID_T id, void *buf, size_t size);
 int spi_exchange_interrupt(SPI_ID_T id,
                            const void *out_data, void *in_buf, size_t size);
 int spi_exchange_polling(SPI_ID_T id,
-                         const void *out_data, void *in_buf, size_t size);
+                         const void *out_data, size_t out_size,
+                         void *in_buf, size_t in_size);
 void spi_cs_enable(SPI_ID_T spi);
 void spi_cs_disable(SPI_ID_T spi);
 void spi_irq_handler(SPI_ID_T id);
