@@ -73,7 +73,6 @@ static err_t ll_output_cb(__attribute__((unused)) struct netif *netif, struct pb
 
 static err_t netif_out_cb(struct netif *netif, struct pbuf *q, const ip4_addr_t *ipaddr)
 {
-    CONSOLE_LOG("Outgoing packet");
     return etharp_output(netif, q, ipaddr);
 }
 

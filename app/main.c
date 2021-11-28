@@ -12,6 +12,7 @@
 #include "osal/osal.h"
 
 #include "app/shell/shell.h"
+#include "app/server.h"
 
 
 void print_banner(void)
@@ -58,6 +59,10 @@ void app(const void *args)
 
     if (osal_thread_create("cmd_line", cmd_line, 512, THREAD_PRIORITY_NORMAL, NULL) == NULL) {
         CONSOLE_ERROR("Can't create cmd_line thread");
+    }
+
+    if (osal_thread_create("srv_conn", mqtt_server_connection, 512, THREAD_PRIORITY_NORMAL, NULL) == NULL) {
+        CONSOLE_ERROR("Can't create srv_conn thread");
     }
 
     osal_thread_delete(osal_thread_self());
