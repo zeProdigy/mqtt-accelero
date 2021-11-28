@@ -1,8 +1,7 @@
 #include <assert.h>
 #include <math.h>
 
-#include "system/lis3dsh.h"
-#include "system/dbgio.h"
+#include "lis3dsh.h"
 
 
 #define WHO_I_AM_REG    0x0f
@@ -77,7 +76,7 @@ int lis3dsh_read_reg(uint8_t addr, uint8_t *content)
 }
 
 
-static int get_xyz(int16_t *x, int16_t *y, int16_t *z)
+int lis3dsh_get_xyz(lis3dsh_xyz_t *out)
 {
     uint8_t buf[6];
     uint8_t cmd = make_command(true, OUT_X_L_REG);
@@ -86,40 +85,14 @@ static int get_xyz(int16_t *x, int16_t *y, int16_t *z)
         return 1;
     }
 
-    *x = (buf[1] << 8) | buf[0];
-	*y = (buf[3] << 8) | buf[2];
-	*z = (buf[5] << 8) | buf[4];
-
-    return 0;
-}
-
-
-int lis3dsh_get_acc(lis3dsh_acc_t *out)
-{
     int16_t x, y, z;
-    
-    if (get_xyz(&x, &y, &z)) {
-        return 1;
-    }
+    x = (buf[1] << 8) | buf[0];
+	y = (buf[3] << 8) | buf[2];
+	z = (buf[5] << 8) | buf[4];
 
-    out->acc_x = x / _ctx.scale;
-    out->acc_y = y / _ctx.scale;
-    out->acc_z = z / _ctx.scale;
-
-    return 0;
-}
-
-
-int lis3dsh_get_tilt(lis3dsh_tilt_t *out)
-{
-    int16_t x, y, z;
-    
-    if (get_xyz(&x, &y, &z)) {
-        return 1;
-    }
-
-    out->pitch = 180 * atan2(y, z) / M_PI;
-	out->roll  = 180 * atan2(x, z) / M_PI;
+    out->x = x / _ctx.scale;
+    out->y = y / _ctx.scale;
+    out->z = z / _ctx.scale;
 
     return 0;
 }

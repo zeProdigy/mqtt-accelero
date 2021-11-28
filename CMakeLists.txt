@@ -52,6 +52,15 @@ file(GLOB_RECURSE STM32F4XX_HAL_SRC
 add_library(st-hal STATIC ${STM32F4XX_HAL_SRC})
 
 
+# -- Drivers
+file(GLOB_RECURSE DRIVERS_SRC
+    "${CMAKE_CURRENT_SOURCE_DIR}/drivers/*.c"
+)
+
+add_library(drivers STATIC ${DRIVERS_SRC})
+target_include_directories(drivers PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include/drivers")
+
+
 # -- System
 file(GLOB_RECURSE SYSTEM_SRC
     "${CMAKE_CURRENT_SOURCE_DIR}/system/*.c"
@@ -59,7 +68,7 @@ file(GLOB_RECURSE SYSTEM_SRC
 
 add_library(system STATIC ${SYSTEM_SRC})
 target_include_directories(system PRIVATE ${LWIP_INCLUDE_DIRS})
-target_link_libraries(system st-hal st-usb osal tiny-printf microrl lwipcore)
+target_link_libraries(system st-hal st-usb osal drivers tiny-printf microrl lwipcore)
 
 
 # -- OSAL
