@@ -21,6 +21,8 @@ static const struct mqtt_connect_client_info_t mqtt_client_info = {
     0     /* will_retain */
 };
 
+static osal_semaphore_t conn_successfull;
+
 
 static void incoming_data_cb(void *arg,
                              const uint8_t *data, uint16_t len,
@@ -49,8 +51,10 @@ static void request_cb(void *arg, err_t err)
     const struct mqtt_connect_client_info_t* ci =
         (const struct mqtt_connect_client_info_t *)arg;
 
-    CONSOLE_LOG("MQTT client \"%s\" request cb: err %d",
-        ci->client_id, (int)err);
+    if (err) {
+        CONSOLE_LOG("MQTT client \"%s\" request cb: err %d",
+            ci->client_id, (int)err);
+    }
 }
 
 
@@ -68,20 +72,31 @@ static void connection_cb(mqtt_client_t *client,
         mqtt_subscribe(client,
                        "$SYS/broker/version", 1,
                        request_cb, LWIP_CONST_CAST(void*, ci));
+
+        osal_semaphore_release(conn_successfull);
     }
 }
 
 
 void mqtt_server_connection(const void *args)
 {
+    int ret;
+    uint32_t timeout = 5000;
+
+    conn_successfull = osal_semaphore_create();
+    if (conn_successfull == NULL) {
+        CONSOLE_ERROR("Can't create sem");
+        goto stop;
+    }
+
     if (accelero_init()) {
-        assert(0);
+        goto stop;
     }
 
     mqtt_client = mqtt_client_new();
     if (mqtt_client == NULL) {
         CONSOLE_LOG("Can't alloc mqtt client struct");
-        assert(0);
+        goto stop;
     }
 
     mqtt_set_inpub_callback(mqtt_client,
@@ -94,6 +109,12 @@ void mqtt_server_connection(const void *args)
                         connection_cb, LWIP_CONST_CAST(void*, &mqtt_client_info),
                         &mqtt_client_info);
 
+    ret = osal_semaphore_wait(conn_successfull, timeout);
+    if (ret) {
+        CONSOLE_ERROR("Can't connect to mqtt server: timeout reached");
+        goto stop;
+    }
+
     while(true) {
         accelero_tilt_t tilt;
         char buf[64];
@@ -102,11 +123,20 @@ void mqtt_server_connection(const void *args)
         
         snprintf(buf,sizeof(buf), "%f;%f", tilt.pitch, tilt.roll);
 
-        mqtt_publish(mqtt_client, "telemetry/tilt",
-                     &buf, strlen(buf),
-                     1, 0,
-                     request_cb, LWIP_CONST_CAST(void*, &mqtt_client_info));
+        ret = mqtt_publish(mqtt_client, "telemetry/tilt",
+                           &buf, strlen(buf),
+                           1, 0,
+                           request_cb, LWIP_CONST_CAST(void*, &mqtt_client_info));
+
+        if (ret) {
+            CONSOLE_ERROR("mqtt_publish err: %d", ret);
+            goto stop;
+        }
         
-        osal_thread_sleep(1000);
+        osal_thread_sleep(100);
     }
+
+stop:
+    CONSOLE_WARN("mqtt_server_connection thread terminated");
+    osal_thread_stop(osal_thread_self());
 }
