@@ -53,6 +53,8 @@ void dbgio_printf_extended(bool use_mutex,
         osal_mutex_lock(mut, OSAL_MAX_TIMEOUT);
     }
 
+    printf("\r");
+
     if (timestamp) {
         struct timeval time;
         gettimeofday(&time, NULL);
