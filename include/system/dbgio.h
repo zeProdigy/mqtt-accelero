@@ -52,6 +52,9 @@ char dbgio_getchar(void);
 #define CONSOLE_ASSERT(format, args...)\
     dbgio_printf_extended(false, true, true, __FUNCTION__, __LINE__, CLR_YELLOW, format, ## args)
 
+#define CONSOLE_WARN(format, args...)\
+    dbgio_printf_extended(false, true, true, __FUNCTION__, __LINE__, CLR_YELLOW, format, ## args)
+
 #define CONSOLE_ERROR(format, args...)\
     dbgio_printf_extended(false, true, true, __FUNCTION__, __LINE__, CLR_RED, format, ## args)
 
