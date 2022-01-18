@@ -33,6 +33,7 @@ int accelero_test(int argc, char *argv[])
                 return 1;
             }
             CONSOLE_LOG("x: %f y: %f z: %f", data.x, data.y, data.z);
+            osal_thread_sleep(50);
         }
     } else if (strcmp(cmd, "tilt") == 0) {
         accelero_tilt_t data;
@@ -42,6 +43,7 @@ int accelero_test(int argc, char *argv[])
                 return 1;
             }
             CONSOLE_LOG("pitch: %f roll: %f", data.pitch, data.roll);
+            osal_thread_sleep(50);
         }
     } else {
         CONSOLE_LOG("Unsupported cmd");
