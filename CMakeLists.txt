@@ -1,6 +1,6 @@
 set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/Cortex-M4.cmake")
 
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.16)
 
 project(stm32f4xx_base C CXX ASM)
 
@@ -15,6 +15,14 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O0 -Wall --std=gnu99 -fdiagnostics-color
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -Wall --std=gnu++11 -fdiagnostics-color=always")
 
 set(CMAKE_EXE_LINKER_FLAGS "-T ${LINKER_SCRIPT}")
+
+execute_process(
+    COMMAND git describe --long --tags --dirty
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE PROJECT_VER
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+message("Project ver: ${PROJECT_VERSION}")
 
 
 # -- 3rdparty
@@ -126,6 +134,9 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${LWIP_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} system st-hal st-usb osal lwipallapps)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".elf")
+
+target_compile_definitions(${PROJECT_NAME} PRIVATE
+    "-DPROJECT_VER=\"${PROJECT_VER}\"")
 
 
 # -- POST BUILD
