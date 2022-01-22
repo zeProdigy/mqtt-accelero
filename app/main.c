@@ -13,7 +13,7 @@
 #include "osal/osal.h"
 
 #include "app/shell/shell.h"
-#include "app/server.h"
+#include "app/mqtt_client.h"
 
 
 void print_banner(void)
