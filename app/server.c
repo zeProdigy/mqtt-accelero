@@ -89,10 +89,6 @@ void mqtt_server_connection(const void *args)
         goto stop;
     }
 
-    if (accelero_init()) {
-        goto stop;
-    }
-
     mqtt_client = mqtt_client_new();
     if (mqtt_client == NULL) {
         CONSOLE_LOG("Can't alloc mqtt client struct");

@@ -14,4 +14,4 @@ struct shell_command {
 };
 
 
-int shell_exec_cmd(int argc, const char * const *argv);
+int shell_exec_cmd(int argc, char *argv[]);

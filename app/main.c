@@ -8,6 +8,7 @@
 #include "system/uptimer.h"
 #include "system/cmd_line.h"
 #include "system/net.h"
+#include "system/accelero.h"
 
 #include "osal/osal.h"
 
@@ -50,6 +51,10 @@ void cmd_line(__attribute__((unused)) void const *params)
 void app(const void *args)
 {
     net_init();
+
+    if (accelero_init()) {
+        CONSOLE_ERROR("Can't init accelero");
+    }
 
     if (usb_ecm_init()) {
         CONSOLE_ERROR("Can't init usb ecm");
