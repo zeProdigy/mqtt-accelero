@@ -2,7 +2,7 @@ set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/Cortex-M4.cmake")
 
 cmake_minimum_required(VERSION 3.16)
 
-project(stm32f4xx_base C CXX ASM)
+project(mqtt-accelero C CXX ASM)
 
 option(FREERTOS "Build target with include FreeRTOS" OFF)
 
@@ -22,7 +22,7 @@ execute_process(
     OUTPUT_VARIABLE PROJECT_VER
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-message("Project ver: ${PROJECT_VERSION}")
+message("Project ver: ${PROJECT_VER}")
 
 
 # -- 3rdparty
