@@ -78,7 +78,6 @@ int accelero_get_tilt(accelero_tilt_t *out)
     }
 
     float mul = 180 / M_PI;
-    int sign = (data.z > 0) ? 1 : -1;
 
     out->pitch = atan2(-data.x, sqrt(data.y * data.y + data.z * data.z)) * mul;
 	out->roll  = atan2(data.y, sqrt(data.x * data.x + data.z * data.z)) * mul;
