@@ -87,8 +87,8 @@ int lis3dsh_get_xyz(lis3dsh_xyz_t *out)
 
     int16_t x, y, z;
     x = (buf[1] << 8) | buf[0];
-	y = (buf[3] << 8) | buf[2];
-	z = (buf[5] << 8) | buf[4];
+    y = (buf[3] << 8) | buf[2];
+    z = (buf[5] << 8) | buf[4];
 
     out->x = x / _ctx.scale;
     out->y = y / _ctx.scale;
