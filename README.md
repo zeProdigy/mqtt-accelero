@@ -28,3 +28,8 @@
 `make -j`
 
 `st-flash write mqtt-accelero.bin 0x8000000`
+
+## Отладка 
+Доступна отладочная uart консоль
+* TX - PA2
+* RX - PA3
