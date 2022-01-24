@@ -4,8 +4,6 @@ cmake_minimum_required(VERSION 3.16)
 
 project(mqtt-accelero C CXX ASM)
 
-option(FREERTOS "Build target with include FreeRTOS" OFF)
-
 set(LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/STM32F407VGTx_FLASH.ld")
 
 add_definitions(-DSTM32F407xx)
